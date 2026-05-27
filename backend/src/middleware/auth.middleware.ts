@@ -1,32 +1,55 @@
-import jwt from "jsonwebtoken"
-import { Request, Response, NextFunction } from "express"
+import { Request, Response, NextFunction }
+from "express";
 
-export const authMiddleware = (
+import jwt from "jsonwebtoken";
+
+import { User }
+from "../models/user.model";
+
+export const verifyJWT = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const accessToken =
-      req.cookies.accessToken
 
-    if (!accessToken) {
+  try {
+
+    const token =
+      req.cookies?.accessToken;
+
+    if (!token) {
+
       return res.status(401).json({
-        message: "No access token",
-      })
+        message: "Unauthorized",
+      });
     }
 
     const decoded = jwt.verify(
-      accessToken,
+      token,
       process.env.ACCESS_TOKEN_SECRET!
-    )
+    ) as {
+      userId: string;
+    };
 
-    req.user = decoded
+    const user = await User.findById(
+      decoded.userId
+    ).select("-password -refreshToken");
 
-    next()
+    if (!user) {
+
+      return res.status(401).json({
+        message: "Invalid token",
+      });
+    }
+
+    req.user = user;
+
+    next();
+
   } catch (error) {
+
     return res.status(401).json({
       message: "Invalid access token",
-    })
+    });
   }
-}
+};

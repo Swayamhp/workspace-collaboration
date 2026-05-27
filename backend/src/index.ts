@@ -1,3 +1,5 @@
+/// <reference path="./types/express/index.d.ts" />
+
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import app from "./app";

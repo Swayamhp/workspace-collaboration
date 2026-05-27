@@ -12,14 +12,14 @@ export const sendTokens = (
   res
     .cookie("accessToken", tokens.accessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
       maxAge: 15 * 60 * 1000,
     })
     .cookie("refreshToken", tokens.refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     })
 }

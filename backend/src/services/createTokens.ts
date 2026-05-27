@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken"
-import { Tokens } from "../utils/sendTokens"
 
 export const generateAccessToken = (userId: string) => {
   return jwt.sign(

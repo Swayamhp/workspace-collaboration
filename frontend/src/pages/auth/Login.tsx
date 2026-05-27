@@ -1,14 +1,36 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-
+import { useAuth } from '../../context/AuthContext'
+import { useNavigate } from "react-router-dom";
 export default function Login() {
+
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json();
+      if (!data) throw new Error("No user found")
+      console.log(data)
+      setUser(data.user);
+      navigate("/dashboard")
 
-    console.log({ email, password })
+
+    } catch (error) {
+      console.log(error);
+    }
+
   }
 
   return (

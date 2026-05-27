@@ -6,8 +6,22 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const payLoad = {
+      name, email, password
+    }
+    console.log(backendUrl)
+    const res = await fetch(`${backendUrl}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payLoad),
+
+    })
+    const data = await res.json();
+    console.log(data);
 
     console.log({
       name,
@@ -15,6 +29,7 @@ export default function Signup() {
       password,
     })
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
