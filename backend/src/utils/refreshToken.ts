@@ -8,10 +8,11 @@ async (
   res: Response
 ) => {
 
-  try {
+  try { 
 
     const refreshToken =
       req.cookies?.refreshToken;
+      console.log(refreshToken);
 
     if (!refreshToken) {
 
