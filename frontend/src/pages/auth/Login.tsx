@@ -1,17 +1,49 @@
 import React, { useState } from 'react';
-import workspaceHero from "../../assets/workspace.svg";
+import workspaceHero from "../../assets/workspace _1.svg";
 import { useAuth } from '../../context/AuthContext'
 import { useNavigate } from "react-router-dom";
+import { useToast } from '../../hooks/useToast';
 
 const Login: React.FC = () => {
-   const [email, setEmail] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false);
   const { setUser } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const validateForm = () => {
+    if (!email.trim()) {
+      toast.error('Validation Error', 'Please enter your email address');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Invalid Email', 'Please enter a valid email address');
+      return false;
+    }
+    if (!password) {
+      toast.error('Validation Error', 'Please enter your password');
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error('Invalid Password', 'Password must be at least 6 characters');
+      return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-     try {
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+    const loadingToast = toast.loading('Signing in...');
+
+
+    try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL;
       const res = await fetch(`${backendUrl}/auth/login`, {
         method: 'POST',
@@ -19,44 +51,140 @@ const Login: React.FC = () => {
         credentials: 'include',
         body: JSON.stringify({ email, password })
       })
+
       const data = await res.json();
-      if (!data) throw new Error("No user found")
-      console.log(data)
+      
+      
+
+      if (!res.ok) {
+        toast.dismiss(loadingToast);
+        toast.error('Login Failed', data.message || 'Invalid email or password');
+        return;
+      }
+
       setUser(data.user);
-      navigate("/dashboard")
-          } catch (error) {
-      console.log(error);
+      toast.dismiss(loadingToast);
+      toast.success('Welcome!', `Login successful, ${data.user?.name || 'user'}`);
+
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
+
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      const errorMessage = error?.message || 'Network error. Please check your connection';
+      toast.error('Connection Error', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-
-  }
-
-
-    console.log('Login attempt:', { email, password });
+  };
 
   return (
     <div className="min-h-screen w-full bg-violet-50 flex items-center">
       <div className="mx-auto my-2 w-[95%] max-w-6xl overflow-hidden rounded-2xl shadow-2xl">
-        <div className="grid lg:grid-cols-2 min-h-[60vh]">
+        <div className="grid md:grid-cols-2 min-h-[60vh]">
           {/* Left - Illustration */}
+          {/* Left - Hero Section */}
           <div className="relative min-h-[45vh] overflow-hidden bg-linear-to-br from-violet-100 via-violet-50 to-violet-100 lg:min-h-screen">
+
+            {/* SVG */}
             <img
               src={workspaceHero}
               alt="Workspace Hero"
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.12),transparent_34%),radial-gradient(circle_at_bottom,rgba(167,139,250,0.06),transparent_28%)] pointer-events-none" />
+
+            {/* Glow Effects */}
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.15),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(167,139,250,0.10),transparent_35%)]" />
+
+            {/* Content */}
+            <div className="absolute inset-0 z-10 flex items-center mb-55">
+              <div className="max-w-lg px-8 lg:px-14">
+
+                {/* Badge */}
+                {/* <div className="inline-flex items-center rounded-full border border-violet-200 bg-white/80 px-4 py-2 backdrop-blur-sm shadow-sm">
+        <span className="text-xs font-semibold uppercase tracking-wider text-violet-700">
+          Workspace Collaboration
+        </span>
+      </div> */}
+
+                {/* Heading */}
+                <h1 className="mt-6 text-3xl font-bold leading-tight text-slate-900 lg:text-5xl">
+                  Work
+                  <span className="block text-violet-600">
+                    Together
+                  </span>
+                  Smarter
+                </h1>
+
+                {/* Description */}
+                <p className="mt-6 text-lg leading-8 text-slate-600">
+                  Organize projects, manage tasks, collaborate with your
+                  team and keep everything in one secure workspace.
+                </p>
+
+                {/* CTA
+      <div className="mt-8 flex gap-4">
+        <button
+          type="button"
+          className="rounded-xl bg-violet-600 px-6 py-3 font-medium text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700"
+        >
+          Get Started
+        </button>
+
+        <button
+          type="button"
+          className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Learn More
+        </button>
+      </div> */}
+
+                {/* Stats
+      <div className="mt-10 flex flex-wrap gap-4">
+
+        <div className="rounded-2xl bg-white/80 p-4 shadow-lg backdrop-blur-sm">
+          <div className="text-2xl font-bold text-slate-900">
+            10K+
+          </div>
+          <div className="text-sm text-slate-500">
+            Active Users
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white/80 p-4 shadow-lg backdrop-blur-sm">
+          <div className="text-2xl font-bold text-slate-900">
+            500+
+          </div>
+          <div className="text-sm text-slate-500">
+            Teams
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white/80 p-4 shadow-lg backdrop-blur-sm">
+          <div className="text-2xl font-bold text-slate-900">
+            99.9%
+          </div>
+          <div className="text-sm text-slate-500">
+            Uptime
+          </div>
+        </div>
+
+      </div> */}
+              </div>
+            </div>
           </div>
 
           {/* Right - Form */}
           <div className="flex items-center justify-center bg-white p-10">
             <div className="w-full max-w-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-violet-600">Welcome back</p>
-              <h3 className="mt-3 text-3xl font-semibold text-slate-900">Sign in to continue</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <h3 className="mt-2 text-3xl font-semibold text-slate-900">Sign in to continue</h3>
+              {/* <p className="mt-3 text-sm leading-6 text-slate-600">
                 Access your workspace, pick up where you left off, and keep everything in sync.
-              </p>
+              </p> */}
 
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+              <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                     Email address
@@ -93,13 +221,14 @@ const Login: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="flex w-full justify-center rounded-xl bg-linear-to-r from-violet-600 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition hover:from-violet-700 hover:to-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-100"
+                  disabled={isLoading}
+                  className="flex w-full cursor-pointer justify-center rounded-xl bg-linear-to-r from-violet-600 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition hover:from-violet-700 hover:to-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Sign in
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
               </form>
 
-              <div className="mt-8">
+              <div className="mt-5">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-200" />
@@ -136,7 +265,7 @@ const Login: React.FC = () => {
 
               <div className="mt-8 text-center text-sm text-slate-600">
                 <span>Don't have an account? </span>
-                <a href="#" className="font-semibold text-violet-600 transition hover:text-violet-700">
+                <a href="/signup" className="font-semibold text-violet-600 transition hover:text-violet-700">
                   Sign up
                 </a>
               </div>

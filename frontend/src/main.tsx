@@ -3,12 +3,27 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
+import { Toaster } from 'sonner';
+
 
 createRoot(document.getElementById('root')!).render(
 
   <StrictMode>
     <AuthProvider>
       <App />
-      </AuthProvider>
+      <Toaster
+        position="bottom-right"
+        richColors
+        expand={false}
+        closeButton
+        visibleToasts={3}
+        theme="light"
+        toastOptions={{
+          style: {
+            fontSize: '14px',
+          },
+        }}
+      />
+    </AuthProvider>
   </StrictMode>,
 )

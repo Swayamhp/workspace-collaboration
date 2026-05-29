@@ -1,114 +1,225 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import workspaceHero from '../../assets/workspace_2.svg';
+import { useToast } from '../../hooks/useToast';
 
-export default function Signup() {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+const Signup: React.FC = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
-    const payLoad = {
-      name, email, password
+  const toast = useToast();
+
+  const validateForm = () => {
+    if (!name.trim()) {
+      toast.error('Validation Error', 'Please enter your name')
+      return false;
     }
-    console.log(backendUrl)
-    const res = await fetch(`${backendUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payLoad),
+    if (name.trim().length <= 2) {
+      toast.error('Validation Error', "Name can't be less than 3 charecters !")
+      return false;
+    }
+    if (/^\d+$/.test(name)) {
+      toast.error('Validation', "Name can't be a number !")
+      return false;
+    }
 
-    })
-    const data = await res.json();
-    console.log(data);
+    if (!email.trim()) {
+      toast.error('Validation Error', 'Please enter your email address');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Invalid Email', 'Please enter a valid email address');
+      return false;
+    }
+    if (!password) {
+      toast.error('Validation Error', 'Please enter your password');
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error('Invalid Password', 'Password must be at least 6 characters');
+      return false;
+    }
+    return true;
+  };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const loadingToast = toast.loading('Register in...');
 
-    console.log({
-      name,
-      email,
-      password,
-    })
-  }
+    try {
+      if (!validateForm()) return;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, email, password }),
+      });
 
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error("Signup failed!", data.message)
+        return;
+      }
+      toast.dismiss(loadingToast)
+      toast.success("Signup success", "Your account created successfully")
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000)
+    } catch (error: any) {
+      toast.error("Signup failed", "Something went wrong!")
+
+    } finally {
+      toast.dismiss(loadingToast)
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg space-y-5"
-      >
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Signup
-          </h1>
+    <div className="min-h-screen w-full bg-violet-50 flex items-center">
+      <div className="mx-auto my-2 w-[95%] max-w-6xl overflow-hidden rounded-2xl shadow-2xl">
+        <div className="grid md:grid-cols-2 min-h-[60vh]">
+          {/* Left - Hero Section */}
+          <div className="relative hidden md:block min-h-[45vh] overflow-hidden bg-linear-to-br from-violet-100 via-violet-50 to-violet-100 lg:min-h-screen">
+            <img
+              src={workspaceHero}
+              alt="Workspace Hero"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
 
-          <p className="text-gray-500 mt-2">
-            Create your account 🚀
-          </p>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.15),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(167,139,250,0.10),transparent_35%)]" />
+
+            <div className="absolute inset-0 z-10 flex items-center mb-55">
+              <div className="max-w-lg px-8 lg:px-14">
+                <h1 className="mt-6 text-3xl font-bold leading-tight text-slate-900 lg:text-5xl">
+                  Work
+                  <span className="block text-violet-600">
+                    Together
+                  </span>
+                  Smarter
+                </h1>
+
+                <p className="mt-6 text-lg leading-8 text-slate-600">
+                  Organize projects, manage tasks, collaborate with your
+                  team and keep everything in one secure workspace.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right - Form */}
+          <div className="flex items-center justify-center bg-white p-5">
+            <div className="w-full max-w-xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-violet-600">Create account</p>
+              <h3 className="mt-2 text-3xl font-semibold text-slate-900">Sign up to get started</h3>
+
+              <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+                <div className="space-y-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-slate-700">
+                    Full name
+                  </label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                    Email address
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                    placeholder="Create a password"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="cursor-pointer flex w-full justify-center rounded-xl bg-linear-to-r from-violet-600 to-violet-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 transition hover:from-violet-700 hover:to-violet-600 focus:outline-none focus:ring-4 focus:ring-violet-100"
+                >
+                  Create account
+                </button>
+              </form>
+
+              <div className="mt-5">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-3 text-slate-500">or continue with</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                    Google
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 24 24">
+                      <path d="M11.4 24H4.6C2 24 0 22 0 19.4V4.6C0 2 2 0 4.6 0h14.8C22 0 24 2 24 4.6v14.8c0 2.6-2 4.6-4.6 4.6h-5.2v-8.7h2.9l.4-3.4h-3.3V9c0-1 .3-1.6 1.7-1.6h1.8V4.4c-.3 0-1.4-.1-2.7-.1-2.7 0-4.5 1.6-4.5 4.6v2.5H9.2v3.4h2.2V24z" fill="#0078D4" />
+                    </svg>
+                    Microsoft
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-8 text-center text-sm text-slate-600">
+                <span>Already have an account? </span>
+                <Link to="/login" className="cursor-pointer font-semibold text-violet-600 transition hover:text-violet-700">
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Name
-          </label>
-
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Email
-          </label>
-
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Password
-          </label>
-
-          <input
-            type="password"
-            placeholder="Create password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition"
-        >
-          Signup
-        </button>
-
-        <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-green-600 hover:underline font-medium"
-          >
-            Login
-          </Link>
-        </p>
-      </form>
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default Signup;
